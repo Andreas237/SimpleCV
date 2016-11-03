@@ -7,9 +7,9 @@ import warnings
 import time
 import socket
 import re
-import urllib2
+import urllib.request
 import types
-import SocketServer
+import socketserver
 import threading
 import tempfile
 import zipfile
@@ -21,9 +21,9 @@ import logging
 import pygame as pg
 import scipy.ndimage as ndimage
 import scipy.stats.stats as sss  #for auto white balance
-import scipy.cluster.vq as scv
+import scipy.cluster.vq as scv    
 import scipy.linalg as nla  # for linear algebra / least squares
-import math # math... who does that
+import math # math... who does that 
 import copy # for deep copy
 import numpy as np
 import scipy.spatial.distance as spsd
@@ -33,7 +33,6 @@ import platform
 import copy
 import types
 import time
-import itertools #for track
 
 from numpy import linspace
 from scipy.interpolate import UnivariateSpline
@@ -59,20 +58,17 @@ except ImportError:
     except ImportError:
         raise ImportError("Cannot load OpenCV library which is required by SimpleCV")
 
-
 #optional libraries
 PIL_ENABLED = True
 try:
-    from PIL import Image as pil
-    from PIL import ImageFont as pilImageFont
-    from PIL import ImageDraw as pilImageDraw
-    from PIL import GifImagePlugin
-    getheader = GifImagePlugin.getheader
-    getdata   = GifImagePlugin.getdata
+    import Image as pil
+    from Image.GifImagePlugin import getheader, getdata
 except ImportError:
     try:
-        import Image as pil
-        from GifImagePlugin import getheader, getdata
+        import PIL.Image as pil
+        from PIL import ImageFont as pilImageFont
+        from PIL import ImageDraw as pilImageDraw
+        from PIL.GifImagePlugin import getheader, getdata
     except ImportError:
         PIL_ENABLED = False
 
@@ -82,12 +78,6 @@ try:
 except ImportError:
     FREENECT_ENABLED = False
 
-ZXING_ENABLED = True
-try:
-    import zxing
-except ImportError:
-    ZXING_ENABLED = False
-
 OCR_ENABLED = True
 try:
     import tesseract
@@ -95,64 +85,15 @@ except ImportError:
     OCR_ENABLED = False
 
 
-PYSCREENSHOT_ENABLED = True
-try:
-    import pyscreenshot
-except ImportError:
-    PYSCREENSHOT_ENABLED = False
-
 ORANGE_ENABLED = True
 try:
-    try:
-        import orange
-    except ImportError:
-        import Orange; import orange
-
+    import orange
     import orngTest #for cross validation
     import orngStat
     import orngEnsemble # for bagging / boosting
 
 except ImportError:
     ORANGE_ENABLED = False
-
-VIMBA_ENABLED = True
-try:
-    import pymba
-except ImportError:
-    #TODO Log an error the pymba is not installed
-    VIMBA_ENABLED = False
-except Exception:
-    #TODO Log an error that AVT Vimba DLL is not installed properly
-    VIMBA_ENABLED = False
-
-class InitOptionsHandler(object):
-    """
-    **summary**
-
-    this handler is supposed to store global variables. for now, its only value
-    defines if simplecv is being run on an ipython notebook.
-
-    """
-
-    def __init__(self):
-        self.on_notebook = False
-        self.headless = False
-
-    def enable_notebook(self):
-        self.on_notebook = True
-
-    def set_headless(self):
-        # set SDL to use the dummy NULL video driver,
-        # so it doesn't need a windowing system.
-        os.environ["SDL_VIDEODRIVER"] = "dummy"
-        self.headless = True
-
-init_options_handler = InitOptionsHandler()
-
-try:
-    import pygame as pg
-except ImportError:
-    init_options_handler.set_headless()
 
 #couple quick typecheck helper functions
 def is_number(n):
@@ -195,7 +136,7 @@ def test():
     This function is meant to run builtin unittests
     """
 
-    print 'unit test'
+    print ('unit test')
 
 
 def download_and_extract(URL):
@@ -210,14 +151,14 @@ def download_and_extract(URL):
     tmpdir = tempfile.mkdtemp()
     filename = os.path.basename(URL)
     path = tmpdir + "/" + filename
-    zdata = urllib2.urlopen(URL)
+    zdata = urllib.request.urlopen(URL)
 
-    print "Saving file to disk please wait...."
+    print ("Saving file to disk please wait....")
     with open(path, "wb") as local_file:
         local_file.write(zdata.read())
 
     zfile = zipfile.ZipFile(path)
-    print "Extracting zipfile"
+    print ("Extracting zipfile")
     try:
         zfile.extractall(tmpdir)
     except:
@@ -304,12 +245,12 @@ def read_logging_level(log_level):
     }
 
     if isinstance(log_level,str):
-        log_level = log_level.lower()
+       log_level = log_level.lower()
 
     if log_level in levels_dict:
         return levels_dict[log_level]
     else:
-        print "The logging level given is not valid"
+        print ("The logging level given is not valid")
         return None
 
 def get_logging_level():
@@ -324,7 +265,7 @@ def get_logging_level():
         50: "CRITICAL"
     }
 
-    print "The current logging level is:", levels_dict[logger.getEffectiveLevel()]
+    print ("The current logging level is:", levels_dict[logger.getEffectiveLevel()])
 
 def set_logging(log_level,myfilename = None):
     """
@@ -343,14 +284,14 @@ def set_logging(log_level,myfilename = None):
     """
 
     if myfilename and ipython_version:
-        try:
-            if ipython_version.startswith("0.10"):
-                __IPYTHON__.set_custom_exc((Exception,), ipython_exception_handler)
-            else:
-                ip = get_ipython()
-                ip.set_custom_exc((Exception,), ipython_exception_handler)
-        except NameError: #In case the interactive shell is not being used
-            sys.exc_clear()
+         try:
+             if ipython_version.startswith("0.10"):
+                 __IPYTHON__.set_custom_exc((Exception,), ipython_exception_handler)
+             else:
+                 ip = get_ipython()
+                 ip.set_custom_exc((Exception,), ipython_exception_handler)
+         except NameError: #In case the interactive shell is not being used
+             sys.exc_clear()
 
 
     level = read_logging_level(log_level)
@@ -361,67 +302,60 @@ def set_logging(log_level,myfilename = None):
         fileHandler.setFormatter(formatter)
         logger.addHandler(fileHandler)
         logger.removeHandler(consoleHandler) #Console logging is disabled.
-        print "Now logging to",myfilename,"with level",log_level
+        print ("Now logging to",myfilename,"with level",log_level)
     elif level:
-        print "Now logging with level",log_level
+        print ("Now logging with level",log_level)
 
     logger.setLevel(level)
 
 def system():
     """
-    
     **SUMMARY**
-    
     Output of this function includes various informations related to system and library.
-    
-    Main purpose:
-    - While submiting a bug, report the output of this function
-    - Checking the current version and later upgrading the library based on the output
-    
+    Main purpose :
+       1) While submiting a bug, report the output of this function
+       2) Checking the current version and later upgrading the library based on the output
+
     **RETURNS**
-    
     None
 
     **EXAMPLE**
-      
-      >>> import SimpleCV
-      >>> SimpleCV.system()
-      
-      
+    >>> import SimpleCV
+    >>> SimpleCV.system()
     """
     try :
         import platform
-        print "System : ", platform.system()
-        print "OS version : ", platform.version()
-        print "Python version :", platform.python_version()
+        print ("System : ", platform.system())
+        print ("OS version : ", platform.version())
+        print ("Python version :", platform.python_version())
         try :
             from cv2 import __version__
-            print "Open CV version : " + __version__
+            print ("Open CV version : " + __version__)
         except ImportError :
-            print "Open CV2 version : " + "2.1"
+            print ("Open CV2 version : " + "2.1")
         if (PIL_ENABLED) :
-            print "PIL version : ", pil.VERSION
+            print ("PIL version : ", pil.VERSION)
         else :
-            print "PIL module not installed"
+            print ("PIL module not installed")
         if (ORANGE_ENABLED) :
-            print "Orange Version : " + orange.version
+            print ("Orange Version : " + orange.version)
         else :
-            print "Orange module not installed"
+            print ("Orange module not installed")
         try :
             import pygame as pg
-            print "PyGame Version : " + pg.__version__
+            print ("PyGame Version : " + pg.__version__)
         except ImportError:
-            print "PyGame module not installed"
+            print ("PyGame module not installed")
         try :
             import pickle
-            print "Pickle Version : " + pickle.__version__
+            print ("Pickle Version : " + pickle.__version__)
         except :
-            print "Pickle module not installed"
+            print ("Pickle module not installed")
 
     except ImportError :
-        print "You need to install Platform to use this function"
-        print "to install you can use:"
-        print "easy_install platform"
+        print ("You need to install Platform to use this function")
+        print ("to install you can use:")
+        print ("easy_install platform")
     return
 
 class LazyProperty(object):
@@ -436,11 +370,26 @@ class LazyProperty(object):
         result = obj.__dict__[self.__name__] = self._func(obj)
         return result
 
-#supported image formats regular expression ignoring case
-IMAGE_FORMATS = ('*.[bB][mM][Pp]','*.[Gg][Ii][Ff]','*.[Jj][Pp][Gg]','*.[jJ][pP][eE]',
-'*.[jJ][Pp][Ee][Gg]','*.[pP][nN][gG]','*.[pP][bB][mM]','*.[pP][gG][mM]','*.[pP][pP][mM]',
-'*.[tT][iI][fF]','*.[tT][iI][fF][fF]','*.[wW][eE][bB][pP]')
+class InitOptionsHandler(object):
+    """
+    **SUMMARY**
 
+    This handler is supposed to store global variables. For now, its only value
+    defines if SimpleCV is being run on an IPython notebook.
+
+    """
+
+    def __init__(self):
+        self.on_notebook = False
+
+    def enable_notebook(self):
+        self.on_notebook = True
+
+
+init_options_handler = InitOptionsHandler()
+
+#supported image formats regular expression
+IMAGE_FORMATS = ('*.bmp','*.gif','*.jpg','*.jpe','*.jpeg','*.png','*.pbm','*.pgm','*.ppm','*.tif','*.tiff','*.webp')
 #maximum image size -
 MAX_DIMENSION = 2*6000 # about twice the size of a full 35mm images - if you hit this, you got a lot data.
 LAUNCH_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__)))
